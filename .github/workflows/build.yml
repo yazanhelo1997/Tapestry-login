@@ -15,16 +15,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install AutoHotkey with compiler
-        uses: holy-tao/install-autohotkey@v1
+        uses: holy-tao/install-autohotkey@v1.2.0
         with:
           version: 'latest'
           compiler: 'latest'
           destination: '${{ github.workspace }}'
 
+      - name: Locate Ahk2Exe.exe
+        shell: pwsh
+        run: |
+          $found = Get-ChildItem -Path "${{ github.workspace }}" -Filter "Ahk2Exe.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (!$found) {
+            $found = Get-ChildItem -Path "C:\" -Filter "Ahk2Exe.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if (!$found) {
+            throw "Could not find Ahk2Exe.exe anywhere"
+          }
+          Write-Host "Found at: $($found.FullName)"
+          echo "AHK2EXE_PATH=$($found.FullName)" >> $env:GITHUB_ENV
+
       - name: Compile script to exe
         shell: pwsh
         run: |
-          & "${{ github.workspace }}\autohotkey\Compiler\Ahk2Exe.exe" /in "TapestryLogin.ahk" /out "TapestryLogin.exe"
+          & "$env:AHK2EXE_PATH" /in "TapestryLogin.ahk" /out "TapestryLogin.exe"
           if (!(Test-Path "TapestryLogin.exe")) {
             throw "Compilation failed: TapestryLogin.exe was not created"
           }
