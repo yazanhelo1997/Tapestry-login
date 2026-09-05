@@ -1,0 +1,27 @@
+name: Build TapestryLogin.exe
+
+on:
+  push:
+    paths:
+      - 'TapestryLogin.ahk'
+      - '.github/workflows/build.yml'
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile with Ahk2Exe
+        uses: nekocodeX/GitHub-Action-Ahk2Exe@main
+        with:
+          in: TapestryLogin.ahk
+          out: TapestryLogin.exe
+
+      - name: Upload compiled exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: TapestryLogin-exe
+          path: TapestryLogin.exe
