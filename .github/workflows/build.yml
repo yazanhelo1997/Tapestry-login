@@ -51,7 +51,7 @@ jobs:
       - name: Compile script to exe
         shell: pwsh
         run: |
-          & "$env:AHK2EXE_PATH" /in "TapestryLogin.ahk" /out "TapestryLogin.exe"
+          & "$env:AHK2EXE_PATH" /in "TapestryLogin.ahk" /out "TapestryLogin.exe" /icon "icon.ico"
           $exitCode = $LASTEXITCODE
           Start-Sleep -Seconds 2
           if (Test-Path "TapestryLogin.exe") {
