@@ -14,14 +14,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compile with Ahk2Exe
-        uses: nekocodeX/GitHub-Action-Ahk2Exe@main
+      - name: Build with AutoHotkey v1.1
+        uses: nukdokplex/autohotkey-build@v0.4
         with:
+          version: v1.1.37.02
+          x64: true
+          x86: false
+          compression: none
           in: TapestryLogin.ahk
-          out: TapestryLogin.exe
+          out: build
 
       - name: Upload compiled exe
         uses: actions/upload-artifact@v4
         with:
           name: TapestryLogin-exe
-          path: TapestryLogin.exe
+          path: build/**
