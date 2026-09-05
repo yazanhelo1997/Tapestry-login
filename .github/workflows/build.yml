@@ -52,8 +52,19 @@ jobs:
         shell: pwsh
         run: |
           & "$env:AHK2EXE_PATH" /in "TapestryLogin.ahk" /out "TapestryLogin.exe"
-          if (!(Test-Path "TapestryLogin.exe")) {
-            throw "Compilation failed: TapestryLogin.exe was not created"
+          $exitCode = $LASTEXITCODE
+          Start-Sleep -Seconds 2
+          if (Test-Path "TapestryLogin.exe") {
+            Write-Host "TapestryLogin.exe confirmed on disk."
+          } elseif ($exitCode -ne 0) {
+            throw "Ahk2Exe exited with code $exitCode and no exe was found"
+          } else {
+            Write-Host "Warning: exe not found at expected relative path, but Ahk2Exe reported success. Searching..."
+            $found = Get-ChildItem -Path "${{ github.workspace }}" -Filter "TapestryLogin.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (!$found) {
+              throw "Ahk2Exe reported success but TapestryLogin.exe cannot be located anywhere in the workspace"
+            }
+            Copy-Item $found.FullName -Destination "TapestryLogin.exe" -Force
           }
 
       - name: Upload compiled exe
