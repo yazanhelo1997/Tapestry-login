@@ -14,25 +14,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install AutoHotkey with compiler
-        uses: holy-tao/install-autohotkey@v1.2.0
-        with:
-          version: 'latest'
-          compiler: 'latest'
-          destination: '${{ github.workspace }}'
+      - name: Download and silently install AutoHotkey (v1.1)
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-install.exe" -OutFile "ahk-install.exe"
+          Start-Process -FilePath ".\ahk-install.exe" -ArgumentList "/S" -Wait
 
       - name: Locate Ahk2Exe.exe
         shell: pwsh
         run: |
-          $found = Get-ChildItem -Path "${{ github.workspace }}" -Filter "Ahk2Exe.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          $candidates = @(
+            "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe",
+            "C:\Program Files (x86)\AutoHotkey\Compiler\Ahk2Exe.exe"
+          )
+          $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (!$found) {
-            $found = Get-ChildItem -Path "C:\" -Filter "Ahk2Exe.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            $found = Get-ChildItem -Path "C:\" -Filter "Ahk2Exe.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
           }
           if (!$found) {
-            throw "Could not find Ahk2Exe.exe anywhere"
+            throw "Could not find Ahk2Exe.exe after installing AutoHotkey"
           }
-          Write-Host "Found at: $($found.FullName)"
-          echo "AHK2EXE_PATH=$($found.FullName)" >> $env:GITHUB_ENV
+          Write-Host "Found at: $found"
+          echo "AHK2EXE_PATH=$found" >> $env:GITHUB_ENV
 
       - name: Compile script to exe
         shell: pwsh
