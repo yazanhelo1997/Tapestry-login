@@ -14,10 +14,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download and silently install AutoHotkey (v1.1)
+      - name: Download and silently install AutoHotkey (v1.1) via GitHub Releases
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-install.exe" -OutFile "ahk-install.exe"
+          $headers = @{ "User-Agent" = "github-actions" }
+          $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/AutoHotkey/AutoHotkey/releases" -Headers $headers
+          $v1release = $releases | Where-Object { $_.tag_name -match '^v1\.' } | Select-Object -First 1
+          if (!$v1release) {
+            throw "Could not find a v1.x AutoHotkey release"
+          }
+          $asset = $v1release.assets | Where-Object { $_.name -like "*setup.exe" } | Select-Object -First 1
+          if (!$asset) {
+            throw "Could not find a setup.exe asset in release $($v1release.tag_name)"
+          }
+          Write-Host "Downloading $($asset.browser_download_url)"
+          Invoke-WebRequest -Uri $asset.browser_download_url -Headers $headers -OutFile "ahk-install.exe"
           Start-Process -FilePath ".\ahk-install.exe" -ArgumentList "/S" -Wait
 
       - name: Locate Ahk2Exe.exe
