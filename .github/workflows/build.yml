@@ -17,11 +17,20 @@ jobs:
       - name: Install AutoHotkey
         run: choco install autohotkey -y --no-progress
 
+      - name: Locate Ahk2Exe.exe
+        shell: pwsh
+        run: |
+          $found = Get-ChildItem -Path "C:\" -Filter "Ahk2Exe.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (!$found) {
+            throw "Could not find Ahk2Exe.exe anywhere on C:\ after installing AutoHotkey"
+          }
+          Write-Host "Found at: $($found.FullName)"
+          echo "AHK2EXE_PATH=$($found.FullName)" >> $env:GITHUB_ENV
+
       - name: Compile script to exe
         shell: pwsh
         run: |
-          $ahk2exe = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
-          & $ahk2exe /in "TapestryLogin.ahk" /out "TapestryLogin.exe"
+          & "$env:AHK2EXE_PATH" /in "TapestryLogin.ahk" /out "TapestryLogin.exe"
           if (!(Test-Path "TapestryLogin.exe")) {
             throw "Compilation failed: TapestryLogin.exe was not created"
           }
