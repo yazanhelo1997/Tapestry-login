@@ -14,18 +14,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with AutoHotkey v1.1
-        uses: nukdokplex/autohotkey-build@v0.4
-        with:
-          version: v1.1.37.02
-          x64: true
-          x86: false
-          compression: none
-          in: TapestryLogin.ahk
-          out: build
+      - name: Install AutoHotkey
+        run: choco install autohotkey -y --no-progress
+
+      - name: Compile script to exe
+        shell: pwsh
+        run: |
+          $ahk2exe = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          & $ahk2exe /in "TapestryLogin.ahk" /out "TapestryLogin.exe"
+          if (!(Test-Path "TapestryLogin.exe")) {
+            throw "Compilation failed: TapestryLogin.exe was not created"
+          }
 
       - name: Upload compiled exe
         uses: actions/upload-artifact@v4
         with:
           name: TapestryLogin-exe
-          path: build/**
+          path: TapestryLogin.exe
